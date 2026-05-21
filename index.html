@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ASCEND Logbuch">
+<title>ASCEND Logbuch</title>
+<style>
+  :root {
+    --ink: #1A1916;
+    --ink-soft: #5F5E5A;
+    --ink-faint: #888780;
+    --paper: #F7F5F0;
+    --paper-warm: #EFECEA;
+    --border: #D4D3CE;
+    --border-soft: #E8E6DF;
+    --white: #FFFFFF;
+    --accent: #854F0B;
+    --accent-soft: #FAEEDA;
+    --green: #3B6D11;
+    --green-soft: #EAF3DE;
+    --red: #A32D2D;
+    --red-soft: #FCEBEB;
+    --blue: #185FA5;
+    --blue-soft: #E6F1FB;
+    --sidebar-bg: #1A1916;
+    --sidebar-text: #F7F5F0;
+    --sidebar-faint: #888780;
+    --sidebar-border: rgba(255,255,255,0.08);
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── App Shell ── */
+  .app {
+    display: flex;
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .sidebar-top {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sidebar-text);
+    margin-bottom: 2px;
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sidebar-faint);
+    margin-bottom: 14px;
+  }
+
+  .btn-new {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.15s;
+  }
+  .btn-new:active { opacity: 0.75; }
+
+  .sidebar-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 12px 0;
+  }
+
+  .sidebar-section-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--sidebar-faint);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .entry-item {
+    padding: 10px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+    transition: background 0.1s;
+  }
+  .entry-item:active { background: rgba(255,255,255,0.08); }
+  .entry-item.active {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.14);
+  }
+
+  .entry-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+
+  .mood-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .entry-item-date {
+    font-size: 10px;
+    color: var(--sidebar-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .entry-item-context {
+    font-size: 12px;
+    color: var(--sidebar-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    opacity: 0.85;
+  }
+
+  .sidebar-bottom {
+    padding: 12px;
+    border-top: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-io {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    color: var(--sidebar-text);
+    border: 1px solid var(--sidebar-border);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s;
+  }
+  .btn-io:active { background: rgba(255,255,255,0.16); }
+
+  .stats-row {
+    padding: 10px 12px 0;
+    display: flex;
+    gap: 6px;
+  }
+
+  .stat-chip {
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 6px 10px;
+    flex: 1;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    display: block;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .stat-label {
+    font-size: 9px;
+    color: var(--sidebar-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .sidebar-empty {
+    padding: 24px 8px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--sidebar-faint);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
+  }
+
+  .main-inner {
+    padding: 32px 36px;
+    max-width: 680px;
+  }
+
+  /* ── Welcome ── */
+  .welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    text-align: center;
+    padding: 40px 24px;
+  }
+
+  .welcome-mark {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .welcome-mark span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--paper);
+  }
+
+  .welcome h1 {
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .welcome h1 strong { font-weight: 600; }
+
+  .welcome p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    max-width: 340px;
+    margin-bottom: 28px;
+  }
+
+  .welcome-hint {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Form ── */
+  .form-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 12px;
+  }
+
+  .form-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .form-btns { display: flex; gap: 8px; }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:active { opacity: 0.75; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:active { background: var(--paper-warm); }
+
+  /* ── Fields ── */
+  .field { margin-bottom: 22px; }
+
+  .field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .field-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .field-name {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .field-hint {
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-style: italic;
+  }
+
+  input[type="text"], input[type="date"], textarea, select {
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.6;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input[type="date"] {
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(26,25,22,0.07);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  textarea { min-height: 88px; resize: vertical; }
+
+  .divider {
+    height: 1px;
+    background: var(--border-soft);
+    margin: 24px 0;
+  }
+
+  /* ── Chip Selectors ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-appearance: none;
+  }
+  .chip:active { opacity: 0.7; }
+
+  .chip.sel-zweifel    { background: var(--red-soft);    border-color: var(--red);    color: var(--red); }
+  .chip.sel-fomo       { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .chip.sel-ungeduld   { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .chip.sel-ruhe       { background: var(--green-soft);  border-color: var(--green);  color: var(--green); }
+  .chip.sel-erleichterung { background: var(--blue-soft); border-color: var(--blue);  color: var(--blue); }
+  .chip.sel-disziplin  { background: var(--green-soft);  border-color: var(--green);  color: var(--green); }
+  .chip.sel-sys        { background: var(--ink);          border-color: var(--ink);    color: var(--paper); }
+
+  /* ── View Mode ── */
+  .view-top {
+    margin-bottom: 24px;
+  }
+
+  .view-date-line {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .view-context-text {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+
+  .view-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .btn-sm {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .btn-sm:active { background: var(--paper-warm); }
+  .btn-sm.danger { color: var(--red); }
+  .btn-sm.danger:active { background: var(--red-soft); border-color: var(--red); }
+
+  .mood-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .mood-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .badge-zweifel    { background: var(--red-soft);    color: var(--red); }
+  .badge-fomo       { background: var(--accent-soft); color: var(--accent); }
+  .badge-ungeduld   { background: var(--accent-soft); color: var(--accent); }
+  .badge-ruhe       { background: var(--green-soft);  color: var(--green); }
+  .badge-erleichterung { background: var(--blue-soft); color: var(--blue); }
+  .badge-disziplin  { background: var(--green-soft);  color: var(--green); }
+
+  .view-block { margin-bottom: 20px; }
+
+  .view-block-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 7px;
+  }
+
+  .view-block-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  .sys-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 11px;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 11px;
+    font-weight: 500;
+    margin: 0 5px 5px 0;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
+    .sidebar { width: 240px; min-width: 240px; }
+    .main-inner { padding: 20px 18px; }
+  }
+
+  @media (max-width: 480px) {
+    .app { flex-direction: column; }
+    .sidebar {
+      width: 100%;
+      height: auto;
+      min-height: 0;
+      max-height: 42vh;
+    }
+    .main { flex: 1; }
+    .main-inner { padding: 16px 16px; }
+  }
+
+  /* Mood dot colors */
+  .dot-zweifel    { background: var(--red); }
+  .dot-fomo       { background: var(--accent); }
+  .dot-ungeduld   { background: var(--accent); }
+  .dot-ruhe       { background: var(--green); }
+  .dot-erleichterung { background: var(--blue); }
+  .dot-disziplin  { background: var(--green); }
+  .dot-none       { background: var(--border); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="logo">ASCEND</div>
+      <div class="logo-sub">Logbuch</div>
+      <button class="btn-new" id="btnNew">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1v12M1 7h12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Neuer Eintrag
+      </button>
+    </div>
+
+    <div id="statsRow" class="stats-row" style="display:none">
+      <div class="stat-chip">
+        <span class="stat-num" id="statTotal">0</span>
+        <span class="stat-label">Einträge</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-num" id="statMonth">0</span>
+        <span class="stat-label">Monat</span>
+      </div>
+    </div>
+
+    <div class="sidebar-scroll" id="sidebarScroll">
+      <div class="sidebar-empty" id="sidebarEmpty">
+        Noch keine Einträge.<br>Starte mit dem ersten Moment.
+      </div>
+      <div id="entryList"></div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="btn-io" id="btnExport">↑ Export</button>
+      <button class="btn-io" id="btnImportTrigger">↓ Import</button>
+      <input type="file" id="btnImport" accept=".json" style="display:none">
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-inner" id="mainInner"></div>
+  </main>
+
+</div>
+
+<script>
+// ── Storage ──────────────────────────────────────────────────────────────────
+const KEY = 'ascend_logbuch_v2';
+
+function loadEntries() {
+  try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveEntries(arr) {
+  try { localStorage.setItem(KEY, JSON.stringify(arr)); }
+  catch(e) { console.warn('Storage error', e); }
+}
+
+let entries = loadEntries();
+let activeId = null;
+let selMood = '';
+let selSys = [];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function todayISO() {
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  const months = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  return `${d}. ${months[parseInt(m)-1]} ${y}`;
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+const MOODS = [
+  {id:'zweifel',label:'Zweifel'},
+  {id:'fomo',label:'FOMO'},
+  {id:'ungeduld',label:'Ungeduld'},
+  {id:'ruhe',label:'Ruhe'},
+  {id:'erleichterung',label:'Erleichterung'},
+  {id:'disziplin',label:'Disziplin'},
+];
+
+const SYS_OPTS = [
+  {id:'dca-laeuft',label:'DCA läuft'},
+  {id:'sparplan-pausiert',label:'Sparplan pausiert'},
+  {id:'nicht-gehandelt',label:'Nicht gehandelt'},
+  {id:'gesichert',label:'Gesichert'},
+  {id:'reinvest',label:'Reinvest'},
+  {id:'review',label:'Review'},
+];
+
+const MOOD_LABELS = Object.fromEntries(MOODS.map(m => [m.id, m.label]));
+const SYS_LABELS  = Object.fromEntries(SYS_OPTS.map(s => [s.id, s.label]));
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('entryList');
+  const empty = document.getElementById('sidebarEmpty');
+  const stats = document.getElementById('statsRow');
+
+  if (entries.length === 0) {
+    empty.style.display = 'block';
+    list.innerHTML = '';
+    stats.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  stats.style.display = 'flex';
+
+  const now = new Date();
+  const thisMonth = entries.filter(e => {
+    if (!e.date) return false;
+    const d = new Date(e.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+
+  document.getElementById('statTotal').textContent = entries.length;
+  document.getElementById('statMonth').textContent = thisMonth;
+
+  const sorted = [...entries].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  list.innerHTML = sorted.map(e => `
+    <div class="entry-item ${activeId === e.id ? 'active' : ''}" data-id="${esc(e.id)}">
+      <div class="entry-item-meta">
+        <span class="mood-dot dot-${e.mood||'none'}"></span>
+        <span class="entry-item-date">${fmtDate(e.date)}</span>
+      </div>
+      <div class="entry-item-context">${esc(e.context || 'Kein Kontext')}</div>
+    </div>
+  `).join('');
+}
+
+// ── Welcome ───────────────────────────────────────────────────────────────────
+function showWelcome() {
+  activeId = null;
+  renderSidebar();
+  document.getElementById('mainInner').innerHTML = `
+    <div class="welcome">
+      <div class="welcome-mark"><span>A</span></div>
+      <h1>Schreib <strong>jetzt</strong>,<br>analysiere später.</h1>
+      <p>Halte den Moment fest — was der Markt macht, was du fühlst, was du tust oder nicht tust. Ohne Filter.</p>
+      <div class="welcome-hint">← Neuer Eintrag</div>
+    </div>`;
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+function showForm(entry) {
+  selMood = entry?.mood || '';
+  selSys  = [...(entry?.system || [])];
+
+  const dateVal = entry?.date || todayISO();
+
+  document.getElementById('mainInner').innerHTML = `
+    <div class="form-top">
+      <div class="form-title">${entry ? 'Eintrag bearbeiten' : 'Neuer Eintrag'}</div>
+      <div class="form-btns">
+        <button class="btn-secondary" id="fBtnCancel">Abbrechen</button>
+        <button class="btn-primary" id="fBtnSave">Speichern</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-num">0</span>
+        <span class="field-name">Datum</span>
+        <span class="field-hint">— kann nachgetragen werden</span>
+      </div>
+      <input type="date" id="fDate" value="${esc(dateVal)}">
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-num">1</span>
+        <span class="field-name">Marktkontext</span>
+        <span class="field-hint">— ein Satz</span>
+      </div>
+      <input type="text" id="fContext" placeholder="z.B. BTC fällt heute 12 %, Panik überall." value="${esc(entry?.context||'')}">
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-num">2</span>
+        <span class="field-name">Was ich fühle</span>
+        <span class="field-hint">— ohne Filter</span>
+      </div>
+      <textarea id="fFeeling" placeholder="Nicht was ich denke — was ich fühle.">${esc(entry?.feeling||'')}</textarea>
+      <div class="chips" id="moodChips" style="margin-top:8px"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-num">3</span>
+        <span class="field-name">Was ich getan / nicht getan habe</span>
+        <span class="field-hint">— ein Satz</span>
+      </div>
+      <input type="text" id="fAction" placeholder="z.B. Ich habe nichts gemacht." value="${esc(entry?.action||'')}">
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-num">4</span>
+        <span class="field-name">Was das System gesagt hat</span>
+      </div>
+      <div class="chips" id="sysChips"></div>
+      <textarea id="fSysNote" style="margin-top:8px" placeholder="Ergänzung optional — z.B. welche Regel greift.">${esc(entry?.systemNote||'')}</textarea>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-name">Sonstige Notizen</span>
+      </div>
+      <textarea id="fNote" style="min-height:100px" placeholder="Alles weitere was du festhalten möchtest.">${esc(entry?.note||'')}</textarea>
+    </div>
+
+    <input type="hidden" id="fId" value="${esc(entry?.id||'')}">
+  `;
+
+  renderMoodChips();
+  renderSysChips();
+
+  document.getElementById('fBtnCancel').addEventListener('click', function() {
+    if (activeId) showEntry(activeId);
+    else showWelcome();
+  });
+
+  document.getElementById('fBtnSave').addEventListener('click', saveEntry);
+}
+
+function renderMoodChips() {
+  const el = document.getElementById('moodChips');
+  if (!el) return;
+  el.innerHTML = MOODS.map(m =>
+    `<button class="chip ${selMood === m.id ? 'sel-'+m.id : ''}" data-mood="${m.id}">${m.label}</button>`
+  ).join('');
+}
+
+function renderSysChips() {
+  const el = document.getElementById('sysChips');
+  if (!el) return;
+  el.innerHTML = SYS_OPTS.map(s =>
+    `<button class="chip ${selSys.includes(s.id) ? 'sel-sys' : ''}" data-sys="${s.id}">${s.label}</button>`
+  ).join('');
+}
+
+// ── View ──────────────────────────────────────────────────────────────────────
+function showEntry(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) { showWelcome(); return; }
+  activeId = id;
+  renderSidebar();
+
+  document.getElementById('mainInner').innerHTML = `
+    <div class="view-top">
+      <div class="view-date-line">${fmtDate(e.date)}</div>
+      <div class="view-context-text">${esc(e.context || '—')}</div>
+      <div class="view-actions-row">
+        <button class="btn-sm" id="vBtnEdit">Bearbeiten</button>
+        <button class="btn-sm danger" id="vBtnDelete">Löschen</button>
+      </div>
+      ${e.mood ? `<div class="mood-badge badge-${e.mood}"><span class="dot"></span>${MOOD_LABELS[e.mood]||e.mood}</div>` : ''}
+    </div>
+
+    ${e.feeling ? `<div class="view-block">
+      <div class="view-block-label">Was ich fühle</div>
+      <div class="view-block-text">${esc(e.feeling)}</div>
+    </div>` : ''}
+
+    ${e.action ? `<div class="view-block">
+      <div class="view-block-label">Was ich getan / nicht getan habe</div>
+      <div class="view-block-text">${esc(e.action)}</div>
+    </div>` : ''}
+
+    ${e.system?.length ? `<div class="view-block">
+      <div class="view-block-label">Was das System gesagt hat</div>
+      <div style="margin-top:6px;margin-bottom:${e.systemNote?'10px':'0'}">
+        ${e.system.map(s => `<span class="sys-tag">${esc(SYS_LABELS[s]||s)}</span>`).join('')}
+      </div>
+      ${e.systemNote ? `<div class="view-block-text">${esc(e.systemNote)}</div>` : ''}
+    </div>` : ''}
+
+    ${e.note ? `<div class="divider"></div>
+    <div class="view-block">
+      <div class="view-block-label">Sonstige Notizen</div>
+      <div class="view-block-text">${esc(e.note)}</div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('vBtnEdit').addEventListener('click', function() {
+    showForm(e);
+  });
+  document.getElementById('vBtnDelete').addEventListener('click', function() {
+    deleteEntry(id);
+  });
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+function saveEntry() {
+  const id = document.getElementById('fId').value;
+  const entry = {
+    id: id || uid(),
+    date: document.getElementById('fDate').value || todayISO(),
+    context: document.getElementById('fContext').value.trim(),
+    feeling: document.getElementById('fFeeling').value.trim(),
+    mood: selMood,
+    action: document.getElementById('fAction').value.trim(),
+    system: [...selSys],
+    systemNote: document.getElementById('fSysNote').value.trim(),
+    note: document.getElementById('fNote').value.trim(),
+  };
+
+  if (!entry.context && !entry.feeling && !entry.action && !entry.note) {
+    alert('Bitte mindestens einen Punkt ausfüllen.');
+    return;
+  }
+
+  if (id) {
+    const idx = entries.findIndex(e => e.id === id);
+    if (idx >= 0) entries[idx] = entry; else entries.push(entry);
+  } else {
+    entries.push(entry);
+  }
+
+  saveEntries(entries);
+  activeId = entry.id;
+  renderSidebar();
+  showEntry(entry.id);
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function deleteEntry(id) {
+  if (!confirm('Diesen Eintrag löschen?')) return;
+  entries = entries.filter(e => e.id !== id);
+  saveEntries(entries);
+  activeId = null;
+  renderSidebar();
+  if (entries.length > 0) {
+    const sorted = [...entries].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    showEntry(sorted[0].id);
+  } else {
+    showWelcome();
+  }
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportEntries() {
+  if (entries.length === 0) { alert('Keine Einträge zum Exportieren.'); return; }
+  const json = JSON.stringify({ version: 2, exported: new Date().toISOString(), entries }, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ascend-logbuch-${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Import ────────────────────────────────────────────────────────────────────
+function importEntries(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const imported = Array.isArray(data) ? data : (data.entries || []);
+      if (!imported.length) { alert('Keine Einträge gefunden.'); return; }
+
+      const existing = entries.map(x => x.id);
+      let added = 0;
+      imported.forEach(entry => {
+        if (!existing.includes(entry.id)) {
+          entries.push(entry);
+          added++;
+        }
+      });
+
+      saveEntries(entries);
+      renderSidebar();
+      alert(`${added} neue Einträge importiert.`);
+
+      if (entries.length > 0) {
+        const sorted = [...entries].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+        showEntry(sorted[0].id);
+      }
+    } catch(err) {
+      alert('Fehler beim Importieren. Bitte gültige JSON-Datei wählen.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Event Delegation ──────────────────────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  // Neuer Eintrag
+  if (e.target.closest('#btnNew')) {
+    selMood = ''; selSys = [];
+    activeId = null;
+    showForm(null);
+    return;
+  }
+
+  // Export
+  if (e.target.closest('#btnExport')) {
+    exportEntries();
+    return;
+  }
+
+  // Import trigger
+  if (e.target.closest('#btnImportTrigger')) {
+    document.getElementById('btnImport').click();
+    return;
+  }
+
+  // Entry item click
+  const item = e.target.closest('.entry-item');
+  if (item) {
+    showEntry(item.dataset.id);
+    return;
+  }
+
+  // Mood chip
+  const moodBtn = e.target.closest('[data-mood]');
+  if (moodBtn) {
+    const m = moodBtn.dataset.mood;
+    selMood = selMood === m ? '' : m;
+    renderMoodChips();
+    return;
+  }
+
+  // System chip
+  const sysBtn = e.target.closest('[data-sys]');
+  if (sysBtn) {
+    const s = sysBtn.dataset.sys;
+    if (selSys.includes(s)) selSys = selSys.filter(x => x !== s);
+    else selSys.push(s);
+    renderSysChips();
+    return;
+  }
+});
+
+// Import file
+document.getElementById('btnImport').addEventListener('change', function() {
+  if (this.files[0]) { importEntries(this.files[0]); this.value = ''; }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderSidebar();
+if (entries.length > 0) {
+  const sorted = [...entries].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  showEntry(sorted[0].id);
+} else {
+  showWelcome();
+}
+</script>
+</body>
+</html>
